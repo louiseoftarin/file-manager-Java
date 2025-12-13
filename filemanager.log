@@ -72,3 +72,15 @@
 2025-12-12 18:16:40 INFO  - Выбран файл: hihi.docx
 2025-12-12 18:17:06 INFO  - Копирование: /Users/dianahalitova/Desktop/hihi/hihi.docx → /Users/dianahalitova/Desktop/hihi.docx
 2025-12-12 18:17:06 INFO  - Файл успешно скопирован
+2025-12-13 17:50:24 INFO  - Запуск графического интерфейса
+2025-12-13 17:50:39 INFO  - Загружено файлов: 2
+2025-12-13 17:50:43 INFO  - Выбран файл: hihi.docx
+2025-12-14 00:16:35 INFO  - Запуск графического интерфейса (Swing)
+2025-12-14 00:18:34 INFO  - Загружено файлов: 2
+2025-12-14 00:18:36 INFO  - Выбран файл: Больных
+2025-12-14 00:20:47 INFO  - Копирование: /Users/dianahalitova/Desktop/hihi/Больных → /Users/dianahalitova/Desktop/Больных
+2025-12-14 00:20:47 ERROR - Ошибка копирования: Файл недоступен для чтения: /Users/dianahalitova/Desktop/hihi/Больных
+2025-12-14 00:20:52 INFO  - Выбран файл: hihi.docx
+2025-12-14 00:20:55 INFO  - Копирование: /Users/dianahalitova/Desktop/hihi/hihi.docx → /Users/dianahalitova/Desktop/hihi.docx
+2025-12-14 00:20:55 INFO  - Файл успешно скопирован
+2025-12-14 00:25:58 INFO  - Запуск графического интерфейса (Swing)
