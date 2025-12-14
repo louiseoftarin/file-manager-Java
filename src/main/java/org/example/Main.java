@@ -22,6 +22,9 @@ public class Main {
     private Path selectedSourceDir;
     private String selectedFileName;
 
+
+    private List<String> actualFileNames = new ArrayList<>();
+
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new Main().createAndShowGUI());
     }
@@ -56,30 +59,33 @@ public class Main {
                 chooser.setDialogTitle("Выберите папку с файлами");
                 int result = chooser.showOpenDialog(frame);
                 if (result == JFileChooser.APPROVE_OPTION) {
-                    File selectedDir = chooser.getSelectedFile();
-                    selectedSourceDir = selectedDir.toPath();
-                    try {
-                        listModel.clear();
-                        List<String> fileItems = Files.list(selectedSourceDir)
-                                .filter(Files::isRegularFile)
-                                .map(file -> {
-                                    try {
-                                        long size = Files.size(file);
-                                        String sizeStr = FileService.formatBytes(size);
-                                        return file.getFileName() + " (" + sizeStr + ")";
-                                    } catch (IOException ioEx) {
-                                        return file.getFileName() + " (ошибка)";
-                                    }
-                                })
-                                .toList();
-                        for (String item : fileItems) {
-                            listModel.addElement(item);
+                    File selectedDirFile = chooser.getSelectedFile();
+                    selectedSourceDir = Path.of(selectedDirFile.toURI());
+
+
+                    listModel.clear();
+                    actualFileNames.clear();
+
+                    File[] files = selectedSourceDir.toFile().listFiles();
+                    if (files != null) {
+                        for (File f : files) {
+                            if (f.isFile()) {
+                                try {
+                                    Path filePath = Path.of(f.toURI());
+                                    long size = Files.size(filePath);
+                                    String sizeStr = FileService.formatBytes(size);
+                                    String displayName = f.getName() + " (" + sizeStr + ")";
+                                    listModel.addElement(displayName);
+                                    actualFileNames.add(f.getName()); // Сохраняем оригинальное имя
+                                } catch (IOException ioEx) {
+                                    String displayName = f.getName() + " (ошибка)";
+                                    listModel.addElement(displayName);
+                                    actualFileNames.add(f.getName());
+                                }
+                            }
                         }
-                        logger.info("Загружено файлов: {}", fileItems.size());
-                    } catch (IOException ex) {
-                        logger.error("Ошибка загрузки файлов: {}", ex.getMessage());
-                        JOptionPane.showMessageDialog(frame, "Ошибка: " + ex.getMessage(), "Ошибка", JOptionPane.ERROR_MESSAGE);
                     }
+                    logger.info("Загружено файлов: {}", actualFileNames.size());
                 }
             }
         });
@@ -88,10 +94,9 @@ public class Main {
             @Override
             public void valueChanged(ListSelectionEvent e) {
                 if (!e.getValueIsAdjusting()) {
-                    String selectedItem = fileList.getSelectedValue();
-                    if (selectedItem != null) {
-                        int firstSpace = selectedItem.indexOf(' ');
-                        selectedFileName = (firstSpace > 0) ? selectedItem.substring(0, firstSpace) : selectedItem;
+                    int index = fileList.getSelectedIndex();
+                    if (index >= 0 && index < actualFileNames.size()) {
+                        selectedFileName = actualFileNames.get(index);
                         logger.info("Выбран файл: {}", selectedFileName);
                     }
                 }
@@ -113,10 +118,20 @@ public class Main {
                 try {
                     Path targetDir = Path.of(targetPathStr);
                     fileService.ensureDirectoryExists(targetDir);
-                    fileService.copyFile(
-                            selectedSourceDir.resolve(selectedFileName),
-                            targetDir.resolve(selectedFileName)
-                    );
+
+
+                    String fileNameToUse = selectedFileName;
+                    String osName = System.getProperty("os.name").toLowerCase();
+                    if (osName.contains("mac")) {
+                        fileNameToUse = java.text.Normalizer.normalize(selectedFileName, java.text.Normalizer.Form.NFD);
+                    }
+
+                    File sourceFileAsFile = new File(selectedSourceDir.toFile(), fileNameToUse);
+                    Path sourceFile = Path.of(sourceFileAsFile.toURI());
+
+                    Path targetFile = targetDir.resolve(selectedFileName);
+                    fileService.copyFile(sourceFile, targetFile);
+
                     JOptionPane.showMessageDialog(frame, "Файл успешно скопирован!", "Успех", JOptionPane.INFORMATION_MESSAGE);
                 } catch (Exception ex) {
                     logger.error("Ошибка копирования: {}", ex.getMessage());
@@ -134,7 +149,7 @@ public class Main {
         frame.add(listScrollPane, BorderLayout.CENTER);
         frame.add(bottomPanel, BorderLayout.SOUTH);
 
-        frame.setSize(600, 400);
+        frame.setSize(600, 500);
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
     }
